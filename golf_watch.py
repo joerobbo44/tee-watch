@@ -208,7 +208,7 @@ def read_availability(dates):
 # ---------- main ----------
 
 def format_alert(new_by_date):
-    lines = ["⛳ Wynyard tee time free", f"({CONFIG['players']} spaces)", ""]
+    lines = ["⛳ Wynyard tee time free", ""]
     for d, times in new_by_date:
         lines.append(f"{d:%a %d %b}: {', '.join(times)}")
     lines += ["", f"Book: {BASE}?clubid={CONFIG['club_id']}&"]
