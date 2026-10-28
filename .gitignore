@@ -1,0 +1,4 @@
+config.json
+debug_*
+.lock
+__pycache__/
