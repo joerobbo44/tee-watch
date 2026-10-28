@@ -140,7 +140,7 @@ def read_availability(dates):
     results = {}
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
+        page = browser.new_page(viewport={"width": 1400, "height": 1000})
 
         # Safety net: if anything ever reaches a booking confirm page, stop dead.
         def guard(frame):
@@ -167,14 +167,14 @@ def read_availability(dates):
             # 2. Set number of players (this only filters the tee sheet, it is not a booking)
             if "home.php" not in page.url:
                 page.goto(BASE + "home.php", wait_until="networkidle")
-            page.get_by_role("button", name=re.compile(r"make.*booking", re.I)).first.click()
+            page.get_by_role("button", name=re.compile(r"make.*booking", re.I)).first.evaluate("b => b.click()")
             page.wait_for_url(re.compile("book_participants"), timeout=20000)
             page.wait_for_load_state("networkidle")
             sel = page.locator("select").first
             sel.wait_for(timeout=15000)
             sel.select_option(str(CONFIG["players"]))
             page.wait_for_timeout(1500)
-            page.get_by_role("button", name=re.compile("submit", re.I)).first.click()
+            page.get_by_role("button", name=re.compile("submit", re.I)).first.evaluate("b => b.click()")
             page.wait_for_load_state("networkidle")
             if "book_date" not in page.url:
                 save_debug(page, "players")
