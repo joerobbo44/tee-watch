@@ -170,11 +170,18 @@ def read_availability(dates):
             page.get_by_role("button", name=re.compile(r"make.*booking", re.I)).first.evaluate("b => b.click()")
             page.wait_for_url(re.compile("book_participants"), timeout=20000)
             page.wait_for_load_state("networkidle")
-            sel = page.locator("select").first
+            sel = page.locator("select#NumPeople")
             sel.wait_for(timeout=15000)
-            sel.select_option(str(CONFIG["players"]))
-            page.wait_for_timeout(1500)
-            page.get_by_role("button", name=re.compile("submit", re.I)).first.evaluate("b => b.click()")
+            if sel.input_value() != str(CONFIG["players"]):
+                # changing this reloads the page by itself
+                with page.expect_navigation(timeout=20000):
+                    sel.select_option(str(CONFIG["players"]))
+                page.wait_for_load_state("networkidle")
+            page.locator("input[name=Submit]").first.evaluate("b => b.click()")
+            try:
+                page.wait_for_url(re.compile("book_date"), timeout=20000)
+            except Exception:
+                pass
             page.wait_for_load_state("networkidle")
             if "book_date" not in page.url:
                 save_debug(page, "players")
