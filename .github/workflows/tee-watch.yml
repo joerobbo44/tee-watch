@@ -1,0 +1,67 @@
+name: Tee watch
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "normal or test"
+        default: "normal"
+
+concurrency:
+  group: tee-watch
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: pip install -r requirements.txt
+
+      - name: Cache browser
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-v1
+
+      - name: Install browser
+        run: python -m playwright install --with-deps chromium
+
+      - name: Check tee sheet
+        env:
+          ELITELIVE_USERNAME: ${{ secrets.ELITELIVE_USERNAME }}
+          ELITELIVE_PASSWORD: ${{ secrets.ELITELIVE_PASSWORD }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python golf_watch.py ${{ github.event.inputs.mode == 'test' && '--test' || '' }}
+
+      - name: Save state
+        if: always()
+        run: |
+          date -u +%F > .keepalive
+          git config user.name "tee-watch-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add state.json .keepalive 2>/dev/null || true
+          git diff --cached --quiet || (git commit -q -m "Update state" && git push -q)
+
+      - name: Keep debug images
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug
+          path: debug_*
+          retention-days: 3
+          if-no-files-found: ignore
