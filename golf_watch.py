@@ -32,7 +32,7 @@ _cfg_file = HERE / "config.json" if (HERE / "config.json").exists() else HERE / 
 CONFIG = json.loads(_cfg_file.read_text())
 for _key in ("elitelive_username", "elitelive_password", "telegram_bot_token", "telegram_chat_id"):
     if os.environ.get(_key.upper()):
-        CONFIG[_key] = os.environ[_key.upper()]
+        CONFIG[_key] = os.environ[_key.upper()].strip()
 STATE_FILE = HERE / "state.json"
 LOCK_FILE = HERE / ".lock"
 TZ = ZoneInfo("Europe/London")
