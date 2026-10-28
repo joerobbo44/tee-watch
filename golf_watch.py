@@ -165,8 +165,14 @@ def read_availability(dates):
                 raise WatchError("Login failed, check username and password in config.json")
 
             # 2. Set number of players (this only filters the tee sheet, it is not a booking)
-            page.goto(BASE + "book_participants.php", wait_until="networkidle")
-            page.locator("select").first.select_option(str(CONFIG["players"]))
+            if "home.php" not in page.url:
+                page.goto(BASE + "home.php", wait_until="networkidle")
+            page.get_by_role("button", name=re.compile(r"make.*booking", re.I)).first.click()
+            page.wait_for_url(re.compile("book_participants"), timeout=20000)
+            page.wait_for_load_state("networkidle")
+            sel = page.locator("select").first
+            sel.wait_for(timeout=15000)
+            sel.select_option(str(CONFIG["players"]))
             page.wait_for_timeout(1500)
             page.get_by_role("button", name=re.compile("submit", re.I)).first.click()
             page.wait_for_load_state("networkidle")
@@ -189,6 +195,11 @@ def read_availability(dates):
                     raise WatchError(f"Could not read tee sheet for {d:%a %d %b} (status {res['status']})")
                 times = sorted({f"{h}:{m}" for h, m in TIME_RE.findall(res["body"])})
                 results[d.isoformat()] = times
+        except WatchError:
+            raise
+        except Exception as e:
+            save_debug(page, "error")
+            raise WatchError(f"{type(e).__name__} at {page.url}: {str(e).splitlines()[0]}")
         finally:
             browser.close()
     return results
