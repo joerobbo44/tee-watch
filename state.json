@@ -230,7 +230,6 @@
       "20:26"
     ],
     "2026-12-12": [
-      "12:34",
       "12:42",
       "12:50",
       "12:58",
@@ -296,9 +295,7 @@
       "20:58"
     ]
   },
-  "pending": [
-    "\u26f3 Wynyard tee time free\n\nSat 12 Dec: 12:34, 12:42, 12:50, 12:58\n\nBook: https://www.e-s-p.com/elitelive/?clubid=833&"
-  ],
+  "pending": [],
   "fail_count": 0,
   "fail_alerted": false
 }
